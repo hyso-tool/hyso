@@ -1,0 +1,27 @@
+aps "d0" "d1" "i0" "i1" 
+init 0 1 2 3 
+--BODY--
+State: 0 [f f f f]
+4 
+State: 1 [f f f t]
+5 
+State: 2 [f f t f]
+6 
+State: 3 [f f t t]
+7 
+State: 4 [t t f f]
+8 
+State: 5 [f t f t]
+9 
+State: 6 [t f t f]
+10 
+State: 7 [f f t t]
+11 
+State: 8 [t t f f]
+8 
+State: 9 [f t f t]
+9 
+State: 10 [t f t f]
+10 
+State: 11 [t t t t]
+11 

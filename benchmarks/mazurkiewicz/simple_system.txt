@@ -1,0 +1,7 @@
+aps "a" 
+init 0 1
+--BODY-- 
+State: 0 [f]
+0 1
+State: 1 [t]
+0 1

@@ -1,0 +1,163 @@
+aps "d0" "d1" "d2" "d3" "i0" "i1" "i2" "i3" 
+init 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 
+--BODY--
+State: 0 [f f f f f f f f]
+16 
+State: 1 [f f f f f f f t]
+17 
+State: 2 [f f f f f f t f]
+18 
+State: 3 [f f f f f f t t]
+19 
+State: 4 [f f f f f t f f]
+20 
+State: 5 [f f f f f t f t]
+21 
+State: 6 [f f f f f t t f]
+22 
+State: 7 [f f f f f t t t]
+23 
+State: 8 [f f f f t f f f]
+24 
+State: 9 [f f f f t f f t]
+25 
+State: 10 [f f f f t f t f]
+26 
+State: 11 [f f f f t f t t]
+27 
+State: 12 [f f f f t t f f]
+28 
+State: 13 [f f f f t t f t]
+29 
+State: 14 [f f f f t t t f]
+30 
+State: 15 [f f f f t t t t]
+31 
+State: 16 [t t t t f f f f]
+32 
+State: 17 [f f f t f f f t]
+33 
+State: 18 [f f t f f f t f]
+34 
+State: 19 [f f f f f f t t]
+35 
+State: 20 [f t f f f t f f]
+36 
+State: 21 [f f f f f t f t]
+37 
+State: 22 [f f f f f t t f]
+38 
+State: 23 [f f f f f t t t]
+39 
+State: 24 [t f f f t f f f]
+40 
+State: 25 [f f f f t f f t]
+41 
+State: 26 [f f f f t f t f]
+42 
+State: 27 [f f f f t f t t]
+43 
+State: 28 [f f f f t t f f]
+44 
+State: 29 [f f f f t t f t]
+45 
+State: 30 [f f f f t t t f]
+46 
+State: 31 [f f f f t t t t]
+47 
+State: 32 [t t t t f f f f]
+48 
+State: 33 [f f f t f f f t]
+49 
+State: 34 [f f t f f f t f]
+50 
+State: 35 [f f t t f f t t]
+51 
+State: 36 [f t f f f t f f]
+52 
+State: 37 [f t f t f t f t]
+53 
+State: 38 [f t t f f t t f]
+54 
+State: 39 [f f f f f t t t]
+55 
+State: 40 [t f f f t f f f]
+56 
+State: 41 [t f f t t f f t]
+57 
+State: 42 [t f t f t f t f]
+58 
+State: 43 [f f f f t f t t]
+59 
+State: 44 [t t f f t t f f]
+60 
+State: 45 [f f f f t t f t]
+61 
+State: 46 [f f f f t t t f]
+62 
+State: 47 [f f f f t t t t]
+63 
+State: 48 [t t t t f f f f]
+64 
+State: 49 [f f f t f f f t]
+65 
+State: 50 [f f t f f f t f]
+66 
+State: 51 [f f t t f f t t]
+67 
+State: 52 [f t f f f t f f]
+68 
+State: 53 [f t f t f t f t]
+69 
+State: 54 [f t t f f t t f]
+70 
+State: 55 [f t t t f t t t]
+71 
+State: 56 [t f f f t f f f]
+72 
+State: 57 [t f f t t f f t]
+73 
+State: 58 [t f t f t f t f]
+74 
+State: 59 [t f t t t f t t]
+75 
+State: 60 [t t f f t t f f]
+76 
+State: 61 [t t f t t t f t]
+77 
+State: 62 [t t t f t t t f]
+78 
+State: 63 [f f f f t t t t]
+79 
+State: 64 [t t t t f f f f]
+64 
+State: 65 [f f f t f f f t]
+65 
+State: 66 [f f t f f f t f]
+66 
+State: 67 [f f t t f f t t]
+67 
+State: 68 [f t f f f t f f]
+68 
+State: 69 [f t f t f t f t]
+69 
+State: 70 [f t t f f t t f]
+70 
+State: 71 [f t t t f t t t]
+71 
+State: 72 [t f f f t f f f]
+72 
+State: 73 [t f f t t f f t]
+73 
+State: 74 [t f t f t f t f]
+74 
+State: 75 [t f t t t f t t]
+75 
+State: 76 [t t f f t t f f]
+76 
+State: 77 [t t f t t t f t]
+77 
+State: 78 [t t t f t t t f]
+78 
+State: 79 [t t t t t t t t]
+79 

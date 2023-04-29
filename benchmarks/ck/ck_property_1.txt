@@ -1,0 +1,10 @@
+mu X : iter([A : sys0],
+( "a"_A) & (X G("d"_A)),
+A, 
+[A : X, B : sys0],
+(G (("a"_A <-> "a"_B) & ("d"_A <-> "d"_B)))
+| 
+(G (("c"_A <-> "c"_B) & ("d"_A <-> "d"_B))) 
+,
+B ).
+forall A : X. "a"_A

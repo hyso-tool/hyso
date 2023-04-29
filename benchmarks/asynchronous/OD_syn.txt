@@ -1,0 +1,1 @@
+forall A : sys0. forall B : sys0. G ("o"_A <-> "o"_B)

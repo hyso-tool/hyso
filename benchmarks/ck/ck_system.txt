@@ -1,0 +1,11 @@
+aps "a" "c" "d" 
+init 0
+--BODY-- 
+State: 0 [t f f]
+0 1 2 3
+State: 1 [f f f]
+2 3
+State: 2 [f t f]
+2 3
+State: 3 [f f t]
+3

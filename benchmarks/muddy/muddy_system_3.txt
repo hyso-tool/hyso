@@ -1,0 +1,67 @@
+aps "d0" "d1" "d2" "i0" "i1" "i2" 
+init 0 1 2 3 4 5 6 7 
+--BODY--
+State: 0 [f f f f f f]
+8 
+State: 1 [f f f f f t]
+9 
+State: 2 [f f f f t f]
+10 
+State: 3 [f f f f t t]
+11 
+State: 4 [f f f t f f]
+12 
+State: 5 [f f f t f t]
+13 
+State: 6 [f f f t t f]
+14 
+State: 7 [f f f t t t]
+15 
+State: 8 [t t t f f f]
+16 
+State: 9 [f f t f f t]
+17 
+State: 10 [f t f f t f]
+18 
+State: 11 [f f f f t t]
+19 
+State: 12 [t f f t f f]
+20 
+State: 13 [f f f t f t]
+21 
+State: 14 [f f f t t f]
+22 
+State: 15 [f f f t t t]
+23 
+State: 16 [t t t f f f]
+24 
+State: 17 [f f t f f t]
+25 
+State: 18 [f t f f t f]
+26 
+State: 19 [f t t f t t]
+27 
+State: 20 [t f f t f f]
+28 
+State: 21 [t f t t f t]
+29 
+State: 22 [t t f t t f]
+30 
+State: 23 [f f f t t t]
+31 
+State: 24 [t t t f f f]
+24 
+State: 25 [f f t f f t]
+25 
+State: 26 [f t f f t f]
+26 
+State: 27 [f t t f t t]
+27 
+State: 28 [t f f t f f]
+28 
+State: 29 [t f t t f t]
+29 
+State: 30 [t t f t t f]
+30 
+State: 31 [t t t t t t]
+31 
