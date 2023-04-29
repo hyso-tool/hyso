@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Util.fs" />
+    <Compile Include="SolverConfiguration.fs" />
+    <Compile Include="AutomataUtil.fs" />
+    <Compile Include="TransitionSystem.fs" />
+    <Compile Include="LassoPath.fs" />
+    <Compile Include="SecondOrderHyperLTL.fs" />
+    <Compile Include="ProductConstruction.fs" />
+    <Compile Include="FirstOrderModelChecking.fs" />
+    <Compile Include="Iteration.fs" />
+    <Compile Include="BidirectionalModelChecking.fs" />
+    <Compile Include="ModelCheckingEntryPoint.fs" />
+    <Compile Include="CommandLineParser.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FParsec" Version="1.1.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FsOmegaLib\FsOmegaLib.fsproj" />
+  </ItemGroup>
+  <PropertyGroup>
+    <OtherFlags>$(OtherFlags) --warnon:1182</OtherFlags>
+  </PropertyGroup>
+</Project>
