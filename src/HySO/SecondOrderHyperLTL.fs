@@ -1,7 +1,5 @@
 module HySO.SecondOrderHyperLTL
 
-open System 
-
 open FsOmegaLib.LTL
 
 type TraceVariable = string 
@@ -12,7 +10,7 @@ type FixpointOperation =
     | LEAST 
     | GREATEST
 
-type IterationDesciption<'L when 'L: comparison>  = 
+type IterationDescription<'L when 'L: comparison>  = 
     {
         TraceDomain : Map<TraceVariable, SetVariable>;
         TransducerFormula : LTL<'L * TraceVariable>;
@@ -28,7 +26,7 @@ type FirstOrderQuantifierType =
     | EXISTS
     
 type SecondOrderConstruction<'L when 'L: comparison> = 
-    | Iteration of init : IterationDesciption<'L> * step : IterationDesciption<'L>
+    | Iteration of init : IterationDescription<'L> * step : IterationDescription<'L>
 
     member this.UsedSetVariables = 
         match this with 
@@ -95,14 +93,14 @@ module Parser =
                     (fun a b c d e f ->
                         let init = 
                             {
-                                IterationDesciption.TraceDomain = Map.ofList a
+                                IterationDescription.TraceDomain = Map.ofList a
                                 TransducerFormula = b
                                 ProjectionTarget = c
                             }
 
                         let step = 
                             {
-                                IterationDesciption.TraceDomain = Map.ofList d;
+                                IterationDescription.TraceDomain = Map.ofList d;
                                 TransducerFormula = e;
                                 ProjectionTarget = f;
                             }

@@ -13,7 +13,7 @@ open ProductConstruction
 open FirstOrderModelChecking
 
 
-type IterationDesciptionAutomataon<'T, 'L when 'L: comparison and 'T: comparison>  = 
+type IterationDescriptionAutomataon<'T, 'L when 'L: comparison and 'T: comparison>  = 
     {
         TraceDomain : Map<TraceVariable, SetVariable>;
         TransducerAutomaton : GNBA<'T, 'L * TraceVariable>;
@@ -27,7 +27,7 @@ type private IntermediateFunctionLabel<'L> =
     | IntRes of 'L * string
 
 
-let computeProjectionAutomaton (soAssignment : Map<SetVariable, GNBA<int, FunctionLabel<'L>>>) (desc: IterationDesciptionAutomataon<int
+let computeProjectionAutomaton (soAssignment : Map<SetVariable, GNBA<int, FunctionLabel<'L>>>) (desc: IterationDescriptionAutomataon<int
 , 'L>) (includeInRange : 'L -> bool) : GNBA<int, FunctionLabel<'L>> = 
 
     let distinctTransducerIndices = 
@@ -113,7 +113,7 @@ let computeProjectionAutomaton (soAssignment : Map<SetVariable, GNBA<int, Functi
 
 
 // A Refiner that maintains an underapprximation by iterating a transducer
-type IterationUnderapproximation<'L when 'L: comparison> (config: Configuration, fixedAssignments : Map<SetVariable, GNBA<int, FunctionLabel<'L>>>, name : SetVariable, init : IterationDesciptionAutomataon<int, 'L>, step : IterationDesciptionAutomataon<int, 'L>) =
+type IterationUnderapproximation<'L when 'L: comparison> (config: Configuration, fixedAssignments : Map<SetVariable, GNBA<int, FunctionLabel<'L>>>, name : SetVariable, init : IterationDescriptionAutomataon<int, 'L>, step : IterationDescriptionAutomataon<int, 'L>) =
 
     let mutable env: Map<SetVariable,SecondOrderAssignment<'L>>  = Map.empty
     let mutable envHasChanged = true

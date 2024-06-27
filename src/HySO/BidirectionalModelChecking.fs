@@ -128,13 +128,13 @@ let modelChecking (config : Configuration) (tslist : list<TransitionSystem<'T, '
                             |> GNBA.addAPs (stepDesc.TransducerFormula |> LTL.allAtoms |> Set.toList)
 
                         let init = {
-                            IterationDesciptionAutomataon.TraceDomain = initDesc.TraceDomain
+                            IterationDescriptionAutomataon.TraceDomain = initDesc.TraceDomain
                             TransducerAutomaton = initAut
                             ProjectionTarget = initDesc.ProjectionTarget
                         }
 
                         let step = {
-                            IterationDesciptionAutomataon.TraceDomain = stepDesc.TraceDomain
+                            IterationDescriptionAutomataon.TraceDomain = stepDesc.TraceDomain
                             TransducerAutomaton = stepAut
                             ProjectionTarget = stepDesc.ProjectionTarget
                         }
