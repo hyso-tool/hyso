@@ -10,7 +10,7 @@ open FsOmegaLib.NBA
 open FsOmegaLib.Operations
 
 open Util
-open SolverConfiguration
+open Configuration
 
 /// Intersect a list of GNBAs
 let constructConjunctionOfGNBAs (autList : list<GNBA<int, 'L>>) = 

@@ -6,7 +6,7 @@
   <ItemGroup>
     <Compile Include="Util.fs" />
     <Compile Include="Json.fs" />
-    <Compile Include="SolverConfiguration.fs" />
+    <Compile Include="Configuration.fs" />
     <Compile Include="AutomataUtil.fs" />
     <Compile Include="TransitionSystem.fs" />
     <Compile Include="LassoPath.fs" />

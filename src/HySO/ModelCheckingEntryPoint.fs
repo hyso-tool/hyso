@@ -3,9 +3,9 @@ module HySO.ModelCheckingEntryPoint
 open System.IO
 
 open Util
-open SolverConfiguration
+open Configuration
 
-let explictSystemVerification (config : SolverConfiguration) systemPaths propPath  = 
+let explictSystemVerification (config : Configuration) systemPaths propPath  = 
     let sw = System.Diagnostics.Stopwatch()
     sw.Start()
 
@@ -26,7 +26,7 @@ let explictSystemVerification (config : SolverConfiguration) systemPaths propPat
                         raise <| HySOException $"Could not open/read file %s{x}"
             )
 
-    Util.LOGGERn $"Read Input in: %i{sw.ElapsedMilliseconds}ms"
+    config.Logger.LogN $"Read Input in: %i{sw.ElapsedMilliseconds}ms"
 
     sw.Restart()
 
@@ -47,7 +47,7 @@ let explictSystemVerification (config : SolverConfiguration) systemPaths propPat
                     raise <| HySOException $"The system could not be parsed: %s{err}"
             )
 
-    Util.LOGGERn  $"Parsed Input in: %i{sw.ElapsedMilliseconds}ms"
+    config.Logger.LogN  $"Parsed Input in: %i{sw.ElapsedMilliseconds}ms"
     
     tslist
     |> List.iteri (fun i x ->
@@ -57,6 +57,6 @@ let explictSystemVerification (config : SolverConfiguration) systemPaths propPat
 
     sw.Restart()
     let res = BidirectionalModelChecking.modelChecking config tslist property
-    Util.LOGGERn $"Solving Time: %i{sw.ElapsedMilliseconds}ms"
+    config.Logger.LogN $"Solving Time: %i{sw.ElapsedMilliseconds}ms"
     
     res

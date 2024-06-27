@@ -7,7 +7,7 @@ open FsOmegaLib.GNBA
 open FsOmegaLib.Operations
 
 open Util
-open SolverConfiguration
+open Configuration
 open SecondOrderHyperLTL
 open ProductConstruction
 open FirstOrderModelChecking
@@ -24,7 +24,7 @@ type private IntermediateFunctionLabel<'L> =
     // Takes the same role as an Arg
     | IntArg of 'L * TraceVariable 
     // Record the intermediate output of some automaton used in the iteration
-    | IntRes of 'L * String
+    | IntRes of 'L * string
 
 
 let computeProjectionAutomaton (soAssignment : Map<SetVariable, GNBA<int, FunctionLabel<'L>>>) (desc: IterationDesciptionAutomataon<int
@@ -113,7 +113,7 @@ let computeProjectionAutomaton (soAssignment : Map<SetVariable, GNBA<int, Functi
 
 
 // A Refiner that maintains an underapprximation by iterating a transducer
-type IterationUnderapproximation<'L when 'L: comparison>(config: SolverConfiguration, fixedAssignments : Map<SetVariable, GNBA<int, FunctionLabel<'L>>>, name : SetVariable, init : IterationDesciptionAutomataon<int, 'L>, step : IterationDesciptionAutomataon<int, 'L>) =
+type IterationUnderapproximation<'L when 'L: comparison> (config: Configuration, fixedAssignments : Map<SetVariable, GNBA<int, FunctionLabel<'L>>>, name : SetVariable, init : IterationDesciptionAutomataon<int, 'L>, step : IterationDesciptionAutomataon<int, 'L>) =
 
     let mutable env: Map<SetVariable,SecondOrderAssignment<'L>>  = Map.empty
     let mutable envHasChanged = true
@@ -192,14 +192,14 @@ type IterationUnderapproximation<'L when 'L: comparison>(config: SolverConfigura
             let iterRes = computeProjectionAutomaton under step (fun _ -> true)
             
             let union = 
-                FsOmegaLib.Operations.AutomataOperations.unionToGNBA Util.DEBUG config.MainPath config.AutfiltPath Effort.HIGH currentModel iterRes
+                FsOmegaLib.Operations.AutomataOperations.unionToGNBA config.RaiseExceptions config.SolverConfig.MainPath config.SolverConfig.AutfiltPath Effort.HIGH currentModel iterRes
                 |> AutomataOperationResult.defaultWith (fun err ->
                         raise <| HySOException err.Info
                     )  
 
             // We check if we have converged to the iteration fixpoint
             let hasReachedFixpoint = 
-                FsOmegaLib.Operations.AutomataChecks.isEquivalent Util.DEBUG config.MainPath config.AutfiltPath union currentModel
+                FsOmegaLib.Operations.AutomataChecks.isEquivalent config.RaiseExceptions config.SolverConfig.MainPath config.SolverConfig.AutfiltPath union currentModel
                 |> AutomataOperationResult.defaultWith (fun err ->
                     raise <| HySOException err.Info
                 )  
@@ -209,9 +209,9 @@ type IterationUnderapproximation<'L when 'L: comparison>(config: SolverConfigura
             
             if hasReachedFixpoint then 
                 // The last iteration did not change the model
-                Util.LOGGERn "#############################"
-                Util.LOGGERn "## Iteration has converged ##"
-                Util.LOGGERn "#############################"
+                config.Logger.LogN "#############################"
+                config.Logger.LogN "## Iteration has converged ##"
+                config.Logger.LogN "#############################"
                 hasConverged <- true
                 false
             else 
@@ -221,7 +221,7 @@ type IterationUnderapproximation<'L when 'L: comparison>(config: SolverConfigura
 
     member this.Update (x, sol) = 
         if List.contains x relevantSetVariables && x <> name then 
-            Util.LOGGERn $"Set varaible %s{x} has been changed. Restart the computation for %s{name}."
+            config.Logger.LogN $"Set varaible %s{x} has been changed. Restart the computation for %s{name}."
             // We update the env and set the flag that this has been updated
             env <- Map.add x sol env
             envHasChanged <- true

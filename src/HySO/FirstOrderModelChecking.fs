@@ -7,7 +7,7 @@ open FsOmegaLib.GNBA
 open FsOmegaLib.Operations
 
 open Util
-open SolverConfiguration
+open Configuration
 open LassoPath
 open ProductConstruction
 open SecondOrderHyperLTL
@@ -33,15 +33,15 @@ type FirstOrderCheckingResult =
     | FO_SAT 
     | FO_UNSAT 
 
-let rec private outsideInModelChecking (config : SolverConfiguration) (soAssignment : Map<SetVariable, SecondOrderAssignment<'L>>) (quantifierPrefix : list<FirstOrderQuantifierType * TraceVariable * SetVariable>) (aut : GNBA<int, 'L * String>, isNegated : bool) = 
+let rec private outsideInModelChecking (config : Configuration) (soAssignment : Map<SetVariable, SecondOrderAssignment<'L>>) (quantifierPrefix : list<FirstOrderQuantifierType * TraceVariable * SetVariable>) (aut : GNBA<int, 'L * string>, isNegated : bool) = 
     
     if quantifierPrefix.IsEmpty then 
         assert (aut.APs.Length = 0)
 
-        Util.LOGGERn $"Checking for emptiness..."
+        config.Logger.LogN $"Checking for emptiness..."
 
         let isEmpty = 
-            FsOmegaLib.Operations.AutomataChecks.isEmpty Util.DEBUG config.MainPath config.AutfiltPath aut
+            FsOmegaLib.Operations.AutomataChecks.isEmpty config.RaiseExceptions config.SolverConfig.MainPath config.SolverConfig.AutfiltPath aut
             |> AutomataOperationResult.defaultWith (fun err ->
                 raise <| HySOException err.Info
             ) 
@@ -57,12 +57,12 @@ let rec private outsideInModelChecking (config : SolverConfiguration) (soAssignm
 
         match lastQunatifier with 
         | (EXISTS, pi, x)  -> 
-            Util.LOGGERn $"Start checking of exists %s{pi} : %s{x}..."
+            config.Logger.LogN $"Start checking of exists %s{pi} : %s{x}..."
             // Make sure that the automaton is positive
             let positiveAut = 
                 if isNegated then 
-                    Util.LOGGERn $"Start automaton complementation..."
-                    FsOmegaLib.Operations.AutomataOperations.complementToGNBA Util.DEBUG config.MainPath config.AutfiltPath Effort.HIGH aut
+                    config.Logger.LogN $"Start automaton complementation..."
+                    FsOmegaLib.Operations.AutomataOperations.complementToGNBA config.RaiseExceptions config.SolverConfig.MainPath config.SolverConfig.AutfiltPath Effort.HIGH aut
                     |> AutomataOperationResult.defaultWith (fun err ->
                         raise <| HySOException err.Info
                     ) 
@@ -76,12 +76,12 @@ let rec private outsideInModelChecking (config : SolverConfiguration) (soAssignm
             
 
         | (FORALL, pi, x) -> 
-            Util.LOGGERn $"Start checking of forall %s{pi} : %s{x}..."
+            config.Logger.LogN $"Start checking of forall %s{pi} : %s{x}..."
             // Make sure the automaton is negated
             let negativeAut = 
                 if not isNegated then 
-                    Util.LOGGERn $"Start automaton complementation..."
-                    FsOmegaLib.Operations.AutomataOperations.complementToGNBA Util.DEBUG config.MainPath config.AutfiltPath Effort.HIGH aut
+                    config.Logger.LogN $"Start automaton complementation..."
+                    FsOmegaLib.Operations.AutomataOperations.complementToGNBA config.RaiseExceptions config.SolverConfig.MainPath config.SolverConfig.AutfiltPath Effort.HIGH aut
                     |> AutomataOperationResult.defaultWith (fun err ->
                         raise <| HySOException err.Info
                     ) 
@@ -99,10 +99,10 @@ type VerificationResult =
     | UNSAT 
     | UNKNOWN
 
-let checkSatisfactionOrViolation (config : SolverConfiguration) (soAssignment : Map<SetVariable, SecondOrderAssignment<'L>>) (quantifierPrefix : list<FirstOrderQuantifierType * TraceVariable * SetVariable>) (aut : GNBA<int, 'L * String>, negAut : GNBA<int, 'L * String>) = 
+let checkSatisfactionOrViolation (config : Configuration) (soAssignment : Map<SetVariable, SecondOrderAssignment<'L>>) (quantifierPrefix : list<FirstOrderQuantifierType * TraceVariable * SetVariable>) (aut : GNBA<int, 'L * string>, negAut : GNBA<int, 'L * string>) = 
 
     // We first check if the formula holds 
-    Util.LOGGERn $"---------- SAT Check ----------"
+    config.Logger.LogN $"---------- SAT Check ----------"
     let posRes = 
         match List.last quantifierPrefix with 
         | (EXISTS, _, _) -> 
@@ -110,7 +110,7 @@ let checkSatisfactionOrViolation (config : SolverConfiguration) (soAssignment : 
         | (FORALL, _, _) -> 
             outsideInModelChecking config soAssignment quantifierPrefix (negAut, true)
 
-    Util.LOGGERn $"---------- SAT Check - END ----------"
+    config.Logger.LogN $"---------- SAT Check - END ----------"
 
     match posRes with 
     | FO_SAT -> 
@@ -126,7 +126,7 @@ let checkSatisfactionOrViolation (config : SolverConfiguration) (soAssignment : 
                 | (EXISTS, x, y) -> (FORALL, x, y) 
             )
 
-        Util.LOGGERn $"---------- UNSAT Check ----------"
+        config.Logger.LogN $"---------- UNSAT Check ----------"
         // We check the negated formula, i.e., flip the prefix and use the negated body
         let negRes = 
             match List.last flippedPrefix with 
@@ -134,7 +134,7 @@ let checkSatisfactionOrViolation (config : SolverConfiguration) (soAssignment : 
                 outsideInModelChecking config soAssignment flippedPrefix (negAut, false)
             | (FORALL, _, _) -> 
                 outsideInModelChecking config soAssignment flippedPrefix (aut, true)
-        Util.LOGGERn $"---------- UNSAT Check - END ----------"
+        config.Logger.LogN $"---------- UNSAT Check - END ----------"
         match negRes with 
         | FO_SAT -> 
             // The negation holds, so the orginal formula does not

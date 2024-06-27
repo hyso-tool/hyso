@@ -3,30 +3,7 @@ module HySO.Util
 open System
 open System.Collections.Generic
 
-exception HySOException of String
-
-let mutable DEBUG = false
-let mutable DebugPrintouts = false
-
-let LOGGER (s : String) = 
-    if DebugPrintouts then 
-        printf $"%s{s}"
-    else 
-        ()
-
-let LOGGERn (s : String) = 
-    if DebugPrintouts then 
-        printfn $"%s{s}"
-    else 
-        ()
-
-let rec combineStringsWithSeperator (s: String) (l: list<String>) = 
-    match l with 
-    | [] -> ""
-    | [x] -> x
-    | x::y::xs -> 
-        x + s + combineStringsWithSeperator s (y::xs)
-
+exception HySOException of string
 
 /// Given a number n, computes all lists of booleans of length n 
 let rec computeBooleanPowerSet n =

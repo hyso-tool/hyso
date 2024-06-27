@@ -4,9 +4,9 @@ open System
 
 open FsOmegaLib.LTL
 
-type TraceVariable = String 
+type TraceVariable = string 
 
-type SetVariable = String 
+type SetVariable = string 
 
 type FixpointOperation = 
     | LEAST 
@@ -125,7 +125,7 @@ module Parser =
 
 
     let private secondOrderHyperLTLParser (atomParser : Parser<'T, unit>) = 
-        let ap : Parser<'T * String, unit>= 
+        let ap : Parser<'T * string, unit>= 
             atomParser .>> pchar '_' .>>. (many1Chars letter)
 
         pipe2 

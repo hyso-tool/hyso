@@ -1,21 +1,21 @@
-module HySO.SolverConfiguration 
+module HySO.Configuration
 
 open System.IO
 
-open Util 
+open Util
 open Json
 
-type SolverConfiguration = 
+type SolverConfiguration =
     {
-        MainPath : string;
+        MainPath : string
         AutfiltPath : string
         Ltl2tgbaPath : string
     }
 
 let private parseSolverConfig (s : string) =
-    match Json.Parser.parseJsonString s with 
+    match Json.Parser.parseJsonString s with
     | Result.Error err -> raise <| HySOException $"Could not parse config file: %s{err}"
-    | Result.Ok x -> 
+    | Result.Ok x ->
         {
             MainPath = "./"
             AutfiltPath =
@@ -23,36 +23,56 @@ let private parseSolverConfig (s : string) =
                 |> Option.defaultWith (fun _ -> raise <| HySOException "No field 'autfilt' found")
                 |> Json.tryGetString
                 |> Option.defaultWith (fun _ -> raise <| HySOException "Field 'autfilt' must contain a string")
-            Ltl2tgbaPath = 
+            Ltl2tgbaPath =
                 (Json.tryLookup "ltl2tgba" x)
                 |> Option.defaultWith (fun _ -> raise <| HySOException "No field 'ltl2tgba' found")
                 |> Json.tryGetString
                 |> Option.defaultWith (fun _ -> raise <| HySOException "Field 'ltl2tgba' must contain a string")
         }
 
-let getSolverConfig() = 
+let getSolverConfig () =
     // By convention the paths.json file is located in the same directory as the executable
-    let configPath = 
-        System.IO.Path.Join [|System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location); "paths.json"|]
-                     
+    let configPath =
+        System.IO.Path.Join
+            [|
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location)
+                "paths.json"
+            |]
+
     // Check if the path to the config file is valid, i.e., the file exists
-    if System.IO.FileInfo(configPath).Exists |> not then 
-        raise <| HySOException "The paths.json file does not exist in the same directory as the executable"            
-    
+    if System.IO.FileInfo(configPath).Exists |> not then
+        raise
+        <| HySOException "The paths.json file does not exist in the same directory as the executable"
+
     // Parse the config file
-    let configContent = 
+    let configContent =
         try
             File.ReadAllText configPath
-        with 
-            | _ -> 
-                raise <| HySOException "Could not open paths.json file"
+        with _ ->
+            raise <| HySOException "Could not open paths.json file"
 
     let solverConfig = parseSolverConfig configContent
 
-    if System.IO.FileInfo(solverConfig.AutfiltPath).Exists |> not then 
+    if System.IO.FileInfo(solverConfig.AutfiltPath).Exists |> not then
         raise <| HySOException "The path to the spot's autfilt is incorrect"
 
-    if System.IO.FileInfo(solverConfig.Ltl2tgbaPath).Exists |> not then 
+    if System.IO.FileInfo(solverConfig.Ltl2tgbaPath).Exists |> not then
         raise <| HySOException "The path to the spot's ltl2tgba is incorrect"
-    
+
     solverConfig
+
+
+
+type Logger =
+    {
+        Log : string -> unit
+    }
+
+    member this.LogN s = this.Log(s + "\n")
+
+type Configuration =
+    {
+        SolverConfig : SolverConfiguration
+        Logger : Logger
+        RaiseExceptions : bool
+    }

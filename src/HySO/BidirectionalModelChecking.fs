@@ -7,7 +7,7 @@ open FsOmegaLib.GNBA
 open FsOmegaLib.Operations
 
 open Util
-open SolverConfiguration
+open Configuration
 open TransitionSystem
 open ProductConstruction
 open FirstOrderModelChecking
@@ -39,7 +39,7 @@ let private computeNeededSetVariables (prefix : list<Quantifier<'L>>) : Set<SetV
 
     addVars firstOrderNeed
 
-let modelChecking (config : SolverConfiguration) (tslist : list<TransitionSystem<'T, 'L>>) (property : SOHyperLTL<'L>) =
+let modelChecking (config : Configuration) (tslist : list<TransitionSystem<'T, 'L>>) (property : SOHyperLTL<'L>) =
 
     let firstOrderPrefix = 
         property.QuantifierPrefix
@@ -112,16 +112,16 @@ let modelChecking (config : SolverConfiguration) (tslist : list<TransitionSystem
                     match c with 
                     | (LEAST, Iteration (initDesc, stepDesc)) -> 
 
-                        let initAut: GNBA<int,('L * String)> = 
-                            FsOmegaLib.Operations.LTLConversion.convertLTLtoGNBA Util.DEBUG config.MainPath config.Ltl2tgbaPath initDesc.TransducerFormula
+                        let initAut: GNBA<int,('L * string)> = 
+                            FsOmegaLib.Operations.LTLConversion.convertLTLtoGNBA config.RaiseExceptions config.SolverConfig.MainPath config.SolverConfig.Ltl2tgbaPath initDesc.TransducerFormula
                             |> AutomataOperationResult.defaultWith (fun err ->
                                 raise <| HySOException err.Info
                             ) 
                             |> GNBA.addAPs (initDesc.TransducerFormula |> LTL.allAtoms |> Set.toList)
                         
 
-                        let stepAut: GNBA<int,('L * String)> = 
-                            FsOmegaLib.Operations.LTLConversion.convertLTLtoGNBA Util.DEBUG config.MainPath config.Ltl2tgbaPath stepDesc.TransducerFormula
+                        let stepAut: GNBA<int,('L * string)> = 
+                            FsOmegaLib.Operations.LTLConversion.convertLTLtoGNBA config.RaiseExceptions config.SolverConfig.MainPath config.SolverConfig.Ltl2tgbaPath stepDesc.TransducerFormula
                             |> AutomataOperationResult.defaultWith (fun err ->
                                 raise <| HySOException err.Info
                             ) 
@@ -146,20 +146,20 @@ let modelChecking (config : SolverConfiguration) (tslist : list<TransitionSystem
             )
 
     let bodyAut = 
-        FsOmegaLib.Operations.LTLConversion.convertLTLtoGNBA Util.DEBUG config.MainPath config.Ltl2tgbaPath property.LTLMatrix
+        FsOmegaLib.Operations.LTLConversion.convertLTLtoGNBA config.RaiseExceptions config.SolverConfig.MainPath config.SolverConfig.Ltl2tgbaPath property.LTLMatrix
         |> AutomataOperationResult.defaultWith (fun err ->
             raise <| HySOException err.Info
         )  
 
     let negBodyAut =
-        FsOmegaLib.Operations.LTLConversion.convertLTLtoGNBA Util.DEBUG config.MainPath config.Ltl2tgbaPath (LTL.Not property.LTLMatrix)
+        FsOmegaLib.Operations.LTLConversion.convertLTLtoGNBA config.RaiseExceptions config.SolverConfig.MainPath config.SolverConfig.Ltl2tgbaPath (LTL.Not property.LTLMatrix)
         |> AutomataOperationResult.defaultWith (fun err ->
             raise <| HySOException err.Info
         ) 
 
     
     let rec iterativeChecking prec precBound = 
-        Util.LOGGERn $"============= Bidirectional Checking in Iteration %i{prec} ============="
+        config.Logger.LogN $"============= Bidirectional Checking in Iteration %i{prec} ============="
 
         // Get the assignment by querying each iterator for its current model
         let currentAssignment = 
@@ -167,7 +167,7 @@ let modelChecking (config : SolverConfiguration) (tslist : list<TransitionSystem
             |> Map.ofList
             |> Map.map (fun x iterator -> 
                 let u = iterator.GetCurrentModel()
-                Util.LOGGERn $"Current Iteration Approximation Size for %s{x}: %i{u.States.Count} "
+                config.Logger.LogN $"Current Iteration Approximation Size for %s{x}: %i{u.States.Count} "
                 if iterator.ModelIsPrecise() then 
                     SecondOrderAssignment.Fixed u 
                 else 
@@ -176,23 +176,23 @@ let modelChecking (config : SolverConfiguration) (tslist : list<TransitionSystem
             |> Util.joinMaps (Map.map (fun _ x -> Fixed x) fixedAssignment)
 
         // Check the first order prefix with the current model
-        Util.LOGGERn $"Start First-Order Checking..."
+        config.Logger.LogN $"Start First-Order Checking..."
         let r = 
             FirstOrderModelChecking.checkSatisfactionOrViolation config currentAssignment firstOrderPrefix (bodyAut, negBodyAut)
 
         match r with 
         | SAT -> 
-            Util.LOGGERn $"============= Bidirectional Checking in Iteration %i{prec} - END ============="
+            config.Logger.LogN $"============= Bidirectional Checking in Iteration %i{prec} - END ============="
             SAT, prec
         | UNSAT -> 
-            Util.LOGGERn $"============= Bidirectional Checking in Iteration %i{prec} - END ============="
+            config.Logger.LogN $"============= Bidirectional Checking in Iteration %i{prec} - END ============="
             UNSAT, prec
         | UNKNOWN when prec > precBound -> 
-            Util.LOGGERn $"============= Bidirectional Checking in Iteration %i{prec} - END ============="
+            config.Logger.LogN $"============= Bidirectional Checking in Iteration %i{prec} - END ============="
             // exeeced the bound
             UNKNOWN, prec
         | UNKNOWN -> 
-            Util.LOGGERn "Start Second-Order Refinement...."
+            config.Logger.LogN "Start Second-Order Refinement...."
             // Need to refine the second-order assignment 
 
             refinerList
@@ -210,7 +210,7 @@ let modelChecking (config : SolverConfiguration) (tslist : list<TransitionSystem
                         )
                 )
 
-            Util.LOGGERn $"============= Finished Bidirectional Checking in Iteration %i{prec} ============="
+            config.Logger.LogN $"============= Finished Bidirectional Checking in Iteration %i{prec} ============="
             iterativeChecking (prec + 1) precBound
 
     let result = iterativeChecking 0 200

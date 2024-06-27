@@ -3,20 +3,22 @@ module HySO.CommandLineParser
 open System
 
 type ExecutionMode = 
-    | ExplictSystem of list<String> * String
+    | ExplictSystem of list<String> * string
     | INVALID
 
 
 type CommandLineArguments = 
     {
         ExecMode : ExecutionMode
-        DebugOutputs : bool
+        LogPrintouts : bool
+        RaiseExceptions : bool
     }
 
     static member Default = 
         {
             ExecMode = INVALID
-            DebugOutputs = false
+            LogPrintouts = false
+            RaiseExceptions = false
         }
 
 let rec private splitByPredicate (f : 'T -> bool) (xs : list<'T>) = 
@@ -37,7 +39,7 @@ let parseCommandLineArguments (args : list<String>) =
             | x::xs -> 
                 match x with 
                     | "-i" -> 
-                        let args, ys = splitByPredicate (fun (x : String) -> x.[0] = '-') xs
+                        let args, ys = splitByPredicate (fun (x : string) -> x.[0] = '-') xs
             
                         if List.length args < 2 then 
                             Result.Error "Option -i must be followed by at least two arguments"
@@ -45,8 +47,8 @@ let parseCommandLineArguments (args : list<String>) =
                             let propertyFile = args[args.Length - 1]
                             let systemFiles = args[0..args.Length - 2]
                             parseArgumentsRec ys {opt with ExecMode = ExplictSystem(systemFiles, propertyFile)}  
-                    | "--debug" -> 
-                        parseArgumentsRec xs {opt with DebugOutputs = true} 
+                    | "--log" -> 
+                        parseArgumentsRec xs {opt with LogPrintouts = true} 
                     | _ -> Result.Error ("Option " + x + " is not supported" )
         
     parseArgumentsRec args CommandLineArguments.Default
