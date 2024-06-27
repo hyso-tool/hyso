@@ -113,19 +113,19 @@ let modelChecking (config : SolverConfiguration) (tslist : list<TransitionSystem
                     | (LEAST, Iteration (initDesc, stepDesc)) -> 
 
                         let initAut: GNBA<int,('L * String)> = 
-                            match FsOmegaLib.Operations.LTLConversion.convertLTLtoGNBA Util.DEBUG config.MainPath config.Ltl2tgbaPath initDesc.TransducerFormula with 
-                            | Success x -> 
-                                x 
-                                |> GNBA.addAPs (initDesc.TransducerFormula |> LTL.allAtoms |> Set.toList)
-                            | Fail err -> raise <| AnalysisException $"Error: %s{err}"
-
+                            FsOmegaLib.Operations.LTLConversion.convertLTLtoGNBA Util.DEBUG config.MainPath config.Ltl2tgbaPath initDesc.TransducerFormula
+                            |> AutomataOperationResult.defaultWith (fun err ->
+                                raise <| HySOException err.Info
+                            ) 
+                            |> GNBA.addAPs (initDesc.TransducerFormula |> LTL.allAtoms |> Set.toList)
+                        
 
                         let stepAut: GNBA<int,('L * String)> = 
-                            match FsOmegaLib.Operations.LTLConversion.convertLTLtoGNBA Util.DEBUG config.MainPath config.Ltl2tgbaPath stepDesc.TransducerFormula with 
-                            | Success x -> 
-                                x 
-                                |> GNBA.addAPs (stepDesc.TransducerFormula |> LTL.allAtoms |> Set.toList)
-                            | Fail err -> raise <| AnalysisException $"Error: %s{err}"
+                            FsOmegaLib.Operations.LTLConversion.convertLTLtoGNBA Util.DEBUG config.MainPath config.Ltl2tgbaPath stepDesc.TransducerFormula
+                            |> AutomataOperationResult.defaultWith (fun err ->
+                                raise <| HySOException err.Info
+                            ) 
+                            |> GNBA.addAPs (stepDesc.TransducerFormula |> LTL.allAtoms |> Set.toList)
 
                         let init = {
                             IterationDesciptionAutomataon.TraceDomain = initDesc.TraceDomain
@@ -146,14 +146,16 @@ let modelChecking (config : SolverConfiguration) (tslist : list<TransitionSystem
             )
 
     let bodyAut = 
-        match FsOmegaLib.Operations.LTLConversion.convertLTLtoGNBA Util.DEBUG config.MainPath config.Ltl2tgbaPath property.LTLMatrix with 
-        | Success x -> x
-        | Fail err -> raise <| AnalysisException $"Error: %s{err}"
+        FsOmegaLib.Operations.LTLConversion.convertLTLtoGNBA Util.DEBUG config.MainPath config.Ltl2tgbaPath property.LTLMatrix
+        |> AutomataOperationResult.defaultWith (fun err ->
+            raise <| HySOException err.Info
+        )  
 
     let negBodyAut =
-        match FsOmegaLib.Operations.LTLConversion.convertLTLtoGNBA Util.DEBUG config.MainPath config.Ltl2tgbaPath (LTL.Not property.LTLMatrix) with 
-        | Success x -> x
-        | Fail err -> raise <| AnalysisException $"Error: %s{err}"
+        FsOmegaLib.Operations.LTLConversion.convertLTLtoGNBA Util.DEBUG config.MainPath config.Ltl2tgbaPath (LTL.Not property.LTLMatrix)
+        |> AutomataOperationResult.defaultWith (fun err ->
+            raise <| HySOException err.Info
+        ) 
 
     
     let rec iterativeChecking prec precBound = 
@@ -185,7 +187,7 @@ let modelChecking (config : SolverConfiguration) (tslist : list<TransitionSystem
         | UNSAT -> 
             Util.LOGGERn $"============= Bidirectional Checking in Iteration %i{prec} - END ============="
             UNSAT, prec
-        | UNKNOWN _ when prec > precBound -> 
+        | UNKNOWN when prec > precBound -> 
             Util.LOGGERn $"============= Bidirectional Checking in Iteration %i{prec} - END ============="
             // exeeced the bound
             UNKNOWN, prec

@@ -14,7 +14,7 @@ let explictSystemVerification (config : SolverConfiguration) systemPaths propPat
             File.ReadAllText propPath
         with 
             | _ -> 
-                raise <| AnalysisException $"Could not open/read file %s{propPath}"
+                raise <| HySOException $"Could not open/read file %s{propPath}"
                 
     let tscontent = 
         systemPaths
@@ -23,7 +23,7 @@ let explictSystemVerification (config : SolverConfiguration) systemPaths propPat
                     File.ReadAllText  x
                 with 
                     | _ -> 
-                        raise <| AnalysisException $"Could not open/read file %s{x}"
+                        raise <| HySOException $"Could not open/read file %s{x}"
             )
 
     Util.LOGGERn $"Read Input in: %i{sw.ElapsedMilliseconds}ms"
@@ -35,7 +35,7 @@ let explictSystemVerification (config : SolverConfiguration) systemPaths propPat
             | Result.Ok x ->
                 x
             | Result.Error err -> 
-                raise <| AnalysisException $"The formula could not be parsed: %s{err}"
+                raise <| HySOException $"The formula could not be parsed: %s{err}"
                 
        
     let tslist = 
@@ -44,7 +44,7 @@ let explictSystemVerification (config : SolverConfiguration) systemPaths propPat
             match TransitionSystem.Parser.parseTS x with 
                 | Result.Ok y -> y 
                 | Result.Error err -> 
-                    raise <| AnalysisException $"The system could not be parsed: %s{err}"
+                    raise <| HySOException $"The system could not be parsed: %s{err}"
             )
 
     Util.LOGGERn  $"Parsed Input in: %i{sw.ElapsedMilliseconds}ms"
@@ -52,7 +52,7 @@ let explictSystemVerification (config : SolverConfiguration) systemPaths propPat
     tslist
     |> List.iteri (fun i x ->
         if x.IsConsistent() |> not then
-            raise <| AnalysisException $"The %i{i}th transition system is inconsistent"
+            raise <| HySOException $"The %i{i}th transition system is inconsistent"
         )
 
     sw.Restart()

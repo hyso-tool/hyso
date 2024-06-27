@@ -192,15 +192,17 @@ type IterationUnderapproximation<'L when 'L: comparison>(config: SolverConfigura
             let iterRes = computeProjectionAutomaton under step (fun _ -> true)
             
             let union = 
-                match FsOmegaLib.Operations.AutomataOperations.unionToGNBA Util.DEBUG config.MainPath config.AutfiltPath Effort.HIGH currentModel iterRes with 
-                | Success x -> x 
-                | Fail err -> raise <| AnalysisException $"Error: %s{err}"
+                FsOmegaLib.Operations.AutomataOperations.unionToGNBA Util.DEBUG config.MainPath config.AutfiltPath Effort.HIGH currentModel iterRes
+                |> AutomataOperationResult.defaultWith (fun err ->
+                        raise <| HySOException err.Info
+                    )  
 
             // We check if we have converged to the iteration fixpoint
             let hasReachedFixpoint = 
-                match FsOmegaLib.Operations.AutomataChecks.isEquivalent Util.DEBUG config.MainPath config.AutfiltPath union currentModel with 
-                | Success x -> x 
-                | Fail err -> raise <| AnalysisException $"Error: %s{err}"
+                FsOmegaLib.Operations.AutomataChecks.isEquivalent Util.DEBUG config.MainPath config.AutfiltPath union currentModel
+                |> AutomataOperationResult.defaultWith (fun err ->
+                    raise <| HySOException err.Info
+                )  
 
             // We have done one iteration with the new env, so we can set this to false
             envHasChanged <- false

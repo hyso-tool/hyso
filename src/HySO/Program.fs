@@ -1,6 +1,5 @@
 ﻿module HySO.Program
 
-
 open Util
 open FirstOrderModelChecking
 open CommandLineParser
@@ -9,14 +8,14 @@ let run (args: string array) =
     let swtotal = System.Diagnostics.Stopwatch()
     swtotal.Start()
 
-    let config = SolverConfiguration.getConfig()
+    let config = SolverConfiguration.getSolverConfig()
 
     // Parse the command line args
     let cmdArgs =
         match CommandLineParser.parseCommandLineArguments (Array.toList args) with
             | Result.Ok x -> x
             | Result.Error e ->
-                raise <| AnalysisException $"Could not parse commandline arguments: %s{e}"
+                raise <| HySOException $"Could not parse commandline arguments: %s{e}"
 
     Util.DebugPrintouts <- cmdArgs.DebugOutputs
     
@@ -26,7 +25,7 @@ let run (args: string array) =
             | ExplictSystem (systemPaths, propPath) -> 
                 ModelCheckingEntryPoint.explictSystemVerification config systemPaths propPath 
             | INVALID -> 
-                raise <| AnalysisException "Invalid command line arguments"
+                raise <| HySOException "Invalid command line arguments"
 
     match res with 
     | SAT, i -> 
@@ -48,12 +47,12 @@ let main args =
         run args 
         0
     with 
-    | AnalysisException err when Util.DEBUG ->
+    | HySOException err when Util.DEBUG ->
         printfn $"Error: %s{err}"
         reraise() 
     | _ when Util.DEBUG -> 
         reraise()
-    | AnalysisException err -> 
+    | HySOException err -> 
         printfn $"Error: %s{err}"
         1
     | e -> 

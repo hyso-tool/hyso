@@ -3,7 +3,7 @@ module HySO.Util
 open System
 open System.Collections.Generic
 
-exception AnalysisException of String
+exception HySOException of String
 
 let mutable DEBUG = false
 let mutable DebugPrintouts = false

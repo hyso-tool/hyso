@@ -40,17 +40,17 @@ let rec private outsideInModelChecking (config : SolverConfiguration) (soAssignm
 
         Util.LOGGERn $"Checking for emptiness..."
 
-        // We check for emptiness and include whether or the net automaton is negated
-        match FsOmegaLib.Operations.AutomataChecks.isEmpty Util.DEBUG config.MainPath config.AutfiltPath aut with 
-        | Success isEmpty -> 
-            if (isEmpty && not isNegated) || (not isEmpty && isNegated) then 
-                // The property does not hold
-                FO_UNSAT
-            else 
-                FO_SAT
-        | Fail err -> 
-            raise <| AnalysisException $"Error: %s{err}"
+        let isEmpty = 
+            FsOmegaLib.Operations.AutomataChecks.isEmpty Util.DEBUG config.MainPath config.AutfiltPath aut
+            |> AutomataOperationResult.defaultWith (fun err ->
+                raise <| HySOException err.Info
+            ) 
 
+        if (isEmpty && not isNegated) || (not isEmpty && isNegated) then 
+            // The property does not hold
+            FO_UNSAT
+        else 
+            FO_SAT
     else
         let lastQunatifier = List.last quantifierPrefix
         let remainingPrefix = quantifierPrefix[..quantifierPrefix.Length - 2]
@@ -62,9 +62,10 @@ let rec private outsideInModelChecking (config : SolverConfiguration) (soAssignm
             let positiveAut = 
                 if isNegated then 
                     Util.LOGGERn $"Start automaton complementation..."
-                    match FsOmegaLib.Operations.AutomataOperations.complementToGNBA Util.DEBUG config.MainPath config.AutfiltPath Effort.HIGH aut with 
-                    | Success x -> x
-                    | Fail err -> raise <| AnalysisException $"Error: %s{err}"
+                    FsOmegaLib.Operations.AutomataOperations.complementToGNBA Util.DEBUG config.MainPath config.AutfiltPath Effort.HIGH aut
+                    |> AutomataOperationResult.defaultWith (fun err ->
+                        raise <| HySOException err.Info
+                    ) 
                 else 
                     aut
 
@@ -80,9 +81,10 @@ let rec private outsideInModelChecking (config : SolverConfiguration) (soAssignm
             let negativeAut = 
                 if not isNegated then 
                     Util.LOGGERn $"Start automaton complementation..."
-                    match FsOmegaLib.Operations.AutomataOperations.complementToGNBA Util.DEBUG config.MainPath config.AutfiltPath Effort.HIGH aut with 
-                    | Success x -> x
-                    | Fail err -> raise <| AnalysisException $"Error: %s{err}"
+                    FsOmegaLib.Operations.AutomataOperations.complementToGNBA Util.DEBUG config.MainPath config.AutfiltPath Effort.HIGH aut
+                    |> AutomataOperationResult.defaultWith (fun err ->
+                        raise <| HySOException err.Info
+                    ) 
                 else 
                     aut
 
