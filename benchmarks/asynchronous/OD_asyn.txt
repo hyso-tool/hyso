@@ -1,23 +1,13 @@
 forall A : sys0. forall B : sys0. 
 
-mu X : iter([C : all],
-G (("h"_A <-> "h"_C) & ("o"_A <-> "o"_C)),
-C, 
-[C : X, D : all],
-(("h"_C <-> "h"_D) & ("o"_C <-> "o"_D))
-W
-G (("h"_C <-> X "h"_D) & ("o"_C <-> X "o"_D))
-,
-D ).
+fix (X
+    $ [C : all.] {G (("h"_A <-> "h"_C) & ("o"_A <-> "o"_C))} => C
+    $ [C : X. D : all.] {(("h"_C <-> "h"_D) & ("o"_C <-> "o"_D)) W G (("h"_C <-> X "h"_D) & ("o"_C <-> X "o"_D))} => D
+    ).
 
-mu Y : iter([C : all],
-G (("h"_B <-> "h"_C) & ("o"_B <-> "o"_C)),
-C, 
-[C : Y, D : all],
-(("h"_C <-> "h"_D) & ("o"_C <-> "o"_D))
-W
-G (("h"_C <-> X "h"_D) & ("o"_C <-> X "o"_D))
-,
-D ).
+fix (Y
+    $ [C : all.] {G (("h"_B <-> "h"_C) & ("o"_B <-> "o"_C))} => C
+    $ [C : Y. D : all.] {(("h"_C <-> "h"_D) & ("o"_C <-> "o"_D)) W G (("h"_C <-> X "h"_D) & ("o"_C <-> X "o"_D))} => D
+    ).
 
 exists N : X. exists M : Y. G ("o"_N <-> "o"_M)

@@ -1,11 +1,5 @@
-mu X : 
-    iter(
-        [A : sys0],
-        "a"_A & X G ! "a"_A,
-        A,
-        
-        [A : X, B : sys0],
-        ! "a"_B & G ("a"_A <-> X "a"_B),
-        B
-        ).
+fix (X
+    $ [A : sys0.] {"a"_A & X G ! "a"_A} => A 
+    $ [A : X. B : sys0.] {! "a"_B & G ("a"_A <-> X "a"_B)} => B
+    ).
 forall A : X. ("a"_A) | (X "a"_A) | (XX "a"_A) | (XXX "a"_A) | (XXXX "a"_A) | (XXXXX "a"_A) | (XXXXXX "a"_A) | (XXXXXXX "a"_A) | (XXXXXXXX "a"_A) | (XXXXXXXXX "a"_A) | (XXXXXXXXXX "a"_A) | (XXXXXXXXXXX "a"_A) | (XXXXXXXXXXXX "a"_A) | (XXXXXXXXXXXXX "a"_A) | (XXXXXXXXXXXXXX "a"_A)

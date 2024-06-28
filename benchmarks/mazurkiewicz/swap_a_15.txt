@@ -1,11 +1,5 @@
-mu X : 
-    iter(
-        [A : sys0],
-        "a"_A & X G ! "a"_A,
-        A,
-        
-        [A : X, B : sys0],
-        ! "a"_B & G ("a"_A <-> X "a"_B),
-        B
-        ).
+fix (X
+    $ [A : sys0.] {"a"_A & X G ! "a"_A} => A 
+    $ [A : X. B : sys0.] {! "a"_B & G ("a"_A <-> X "a"_B)} => B
+    ).
 exists A : X. XXXXXXXXXXXXXXX "a"_A
