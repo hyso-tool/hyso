@@ -25,10 +25,10 @@ git submodule update
 
 To build HySO you require the following dependencies:
 
-- [.NET 7 SDK](https://dotnet.microsoft.com/en-us/download) (tested with version 7.0.203)
-- [spot](https://spot.lrde.epita.fr/) (tested with version 2.11.5)
+- [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download) (tested with version 8.0.301)
+- [spot](https://spot.lrde.epita.fr/) (tested with version 2.12)
 
-Install the .NET 7 SDK (see [here](https://dotnet.microsoft.com/en-us/download) for details).
+Install the .NET SDK (see [here](https://dotnet.microsoft.com/en-us/download) for details).
 Download and build spot (details can be found [here](https://spot.lrde.epita.fr/)). 
 You can place the spot executables in any location of your choosing. 
 HySO requires the *absolute* path to some of the spot executables (see details below).
@@ -65,13 +65,13 @@ For example, if `/usr/bin/autfilt` and `/usr/bin/ltl2tgba` are the *autfilt* and
 After you have modified the configuration file you can use HySO by running the following
  
 ```shell
-./app/HySO -i <systemPath> <propertyPath>
+./app/HySO <systemPath> <propertyPath>
 ```
 where `<systemPath>` is the (path to the) input system and `<propertyPath>` is the path to the property file.
 
 To check that everything has been set up correctly run 
 ```shell
-./app/HySO -i ./benchmarks/muddy/muddy_system_2.txt ./benchmarks/muddy/muddy_property_2_1.txt
+./app/HySO ./benchmarks/muddy/muddy_system_2.txt ./benchmarks/muddy/muddy_property_2_1.txt
 ```
 which should output `UNSAT`.
 
@@ -84,7 +84,7 @@ In this section, we first discuss the command-line options of HySO, followed by 
 You can call HySO by running
 
 ```
-./app/HySO -i <systemPath> <propertyPath>
+./app/HySO <systemPath> <propertyPath>
 ```
 where `<systemPath>` is a path to a file that contains the input system and `<propertyPath>` is a path to a file that contains the Hyper2LTL property.
 
@@ -92,7 +92,8 @@ For details on how the system and property are specified, we refer to the follow
 
 Additional (optional) command-line options include
 
-- `--debug` prints additional debug outputs
+- `--log` prints additional debug outputs
+- `--witness` prints HOA automata for each second-order variable
 
 ## Specifying Explicit-state Transition Systems
 
@@ -185,32 +186,31 @@ There are two special variables: `sys0` refers to the set of traces of the syste
 
 - Second-order fixpoint quantification of the form 
 ```
-mu <SOVAR> : iter ([(<TVAR> : <SOVAR>)^*], <init>, <TVAR>, [(<TVAR> : <SOVAR>)^*], <step>, <TVAR>)
+fix(<SOVAR> $ <constraints> $ ... $ <constraints>).
 ```
-where `<init>` and `<step>` are quantifier-free formulas (in the `<body>` category).
-This quantification defines a <SOVAR> variable as a fixpoint where we define the initial and step condition. 
+Here each `<constraints>` is a fixpoint constraint of the form 
+```
+[<TVAR> : <SOVAR>. ... <TVAR> : <SOVAR>.] {<body>} => <TVAR>
+```
+This quantification defines a <SOVAR> variable as a fixpoint (defined via the constraints).
 We give an example below. 
 
 
 An example property is the following: 
 
 ```
-mu X : iter([A : sys0],
-("a"_A) & (X G("d"_A)),
-A, 
-[A : X, B : sys0],
-(G (("a"_A <-> "a"_B) & ("d"_A <-> "d"_B)))
-| 
-(G (("c"_A <-> "c"_B) & ("d"_A <-> "d"_B))) 
-,
-B ).
+fix( X
+    $ [A : sys0.] {("a"_A) & (X G("d"_A))} => A 
+    $ [A : X. B : sys0.] {(G (("a"_A <-> "a"_B) & ("d"_A <-> "d"_B))) |  (G (("c"_A <-> "c"_B) & ("d"_A <-> "d"_B))) } => B
+    ).
 forall A : X. "a"_A
 ```
 
 This property defines a second-order variable `X` as follows: 
-For the initial condition, we take some trace `A` from the traces of the system. If this trace satisfies `("a"_A) & (X G("d"_A))` then we take the `A` trace and add it to our initial model (given by the trace variable `A` appearing as the third argument).
-In the step condition, we define which traces we want to add to the set of traces. 
-Here we take any trace `A` in the set `X` we are just defining and any trace `B` in the system. If those two traces satisfy `(G (("a"_A <-> "a"_B) & ("d"_A <-> "d"_B))) | (G (("c"_A <-> "c"_B) & ("d"_A <-> "d"_B)))` then we add trace `B` to the system (indicated by the last argument of `mu`). 
+For the first fixpoint constraint, we take some trace `A` from the traces of the system. 
+If this trace satisfies `("a"_A) & (X G("d"_A))` then we take the `A` trace and add it to our model./
+Similarly, the second constraints defines which traces we want to add to the set of traces. 
+Here we take any trace `A` in the set `X` we are just defining and any trace `B` in the system. If those two traces satisfy `(G (("a"_A <-> "a"_B) & ("d"_A <-> "d"_B))) | (G (("c"_A <-> "c"_B) & ("d"_A <-> "d"_B)))` then we add trace `B` to the model of `X`.
 This defines a unique set of traces bound to `X`. 
 Afterwards we state that all traces `A` in `X` satisfy the AP `a` in the first step (`forall A : X. "a"_A`). 
 
