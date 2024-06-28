@@ -1,3 +1,20 @@
+(*    
+    Copyright (C) 2023-2024 Raven Beutner
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*)
+
 module HySO.Configuration
 
 open System.IO
@@ -54,10 +71,10 @@ let getSolverConfig () =
     let solverConfig = parseSolverConfig configContent
 
     if System.IO.FileInfo(solverConfig.AutfiltPath).Exists |> not then
-        raise <| HySOException "The path to the spot's autfilt is incorrect"
+        raise <| HySOException "The path to the spot's autfilt does not exist"
 
     if System.IO.FileInfo(solverConfig.Ltl2tgbaPath).Exists |> not then
-        raise <| HySOException "The path to the spot's ltl2tgba is incorrect"
+        raise <| HySOException "The path to the spot's ltl2tgba does not exist"
 
     solverConfig
 
@@ -75,4 +92,5 @@ type Configuration =
         SolverConfig : SolverConfiguration
         Logger : Logger
         RaiseExceptions : bool
+        PrintWitness : bool
     }

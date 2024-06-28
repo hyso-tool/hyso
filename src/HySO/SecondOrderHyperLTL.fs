@@ -1,140 +1,212 @@
+(*    
+    Copyright (C) 2023-2024 Raven Beutner
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*)
+
 module HySO.SecondOrderHyperLTL
 
 open FsOmegaLib.LTL
 
-type TraceVariable = string 
+type TraceVariable = string
+type SetVariable = string
 
-type SetVariable = string 
 
-type FixpointOperation = 
-    | LEAST 
-    | GREATEST
-
-type IterationDescription<'L when 'L: comparison>  = 
+type FixpointConstraint<'L when 'L : comparison> =
     {
-        TraceDomain : Map<TraceVariable, SetVariable>;
-        TransducerFormula : LTL<'L * TraceVariable>;
-        ProjectionTarget : TraceVariable
+        QuantifierPrefix : Map<TraceVariable, SetVariable>
+        StepFormula : LTL<'L * TraceVariable>
+        TargetTraceVariable : TraceVariable
     }
 
-    member this.UsedVariables = 
-        this.TraceDomain.Values |> set
+module FixpointConstraint =
+    let usedSetVariables (c : FixpointConstraint<'L>) = c.QuantifierPrefix |> Map.values |> set
 
 
-type FirstOrderQuantifierType = 
+type FirstOrderQuantifierType =
     | FORALL
     | EXISTS
-    
-type SecondOrderConstruction<'L when 'L: comparison> = 
-    | Iteration of init : IterationDescription<'L> * step : IterationDescription<'L>
 
-    member this.UsedSetVariables = 
-        match this with 
-        | Iteration (init, step) -> Set.union init.UsedVariables step.UsedVariables
+type Quantifier<'L when 'L : comparison> =
+    | FirstOrderQuantifier of FirstOrderQuantifierType * TraceVariable * SetVariable
+    | FixpointQuantifier of list<FixpointConstraint<'L>> * SetVariable
 
 
-and Quantifier<'L when 'L: comparison> = 
-    | FirstOrder of FirstOrderQuantifierType * TraceVariable * SetVariable
-    | SecondOrder of FixpointOperation * SetVariable * SecondOrderConstruction<'L>
+module Quantifier =
 
-    member this.SetVariablesNeededFor (x : SetVariable) =
-        match this with 
-        | SecondOrder(_, y, c) when y = x -> 
-            c.UsedSetVariables
+    let setVariablesNeededFor (x : SetVariable) (q : Quantifier<'L>) =
+        match q with
+        | FixpointQuantifier(c, y) when y = x -> c |> List.map FixpointConstraint.usedSetVariables |> Set.unionMany
         | _ -> Set.empty
-        
 
-    member this.UsedSetVariables = 
-        match this with 
-        | FirstOrder (_, _, x) -> Set.singleton x
-        | SecondOrder _ -> Set.empty
 
-and SOHyperLTL<'L when 'L: comparison> = 
+    let usedSetVariables (q : Quantifier<'L>) =
+        match q with
+        | FirstOrderQuantifier(_, _, x) -> Set.singleton x
+        | FixpointQuantifier _ -> Set.empty
+
+
+type SOHyperLTL<'L when 'L : comparison> =
     {
         QuantifierPrefix : list<Quantifier<'L>>
         LTLMatrix : LTL<'L * TraceVariable>
     }
 
+module SOHyperLTL =
+
+    let firstOrderPrefix (formula : SOHyperLTL<'L>) =
+        formula.QuantifierPrefix
+        |> List.choose (
+            function
+            | FirstOrderQuantifier(f, x, s) -> Some(f, x, s)
+            | _ -> None
+        )
+
+    let fixpointConstraintsMap (formula : SOHyperLTL<'L>) =
+        formula.QuantifierPrefix
+        |> List.choose (
+            function
+            | FixpointQuantifier(constraints, y) -> (y, constraints) |> Some
+            | FirstOrderQuantifier _ -> None
+        )
+        |> Map.ofList
+
+
+    exception private FoundError of string
+
+    let findError (formula : SOHyperLTL<'L>) =
+        try
+            let traceVariables = firstOrderPrefix formula |> List.map (fun (_, pi, _) -> pi)
+
+            traceVariables
+            |> List.groupBy id
+            |> List.iter (fun (pi, l) ->
+                if List.length l > 1 then
+                    raise <| FoundError $"Trace variable '{pi}' is quantified more than once"
+            )
+
+            LTL.allAtoms formula.LTLMatrix
+            |> Set.iter (fun (_, pi) ->
+                if List.contains pi traceVariables |> not then
+                    raise
+                    <| FoundError $"Trace variable '{pi}' is used but not defined in the prefix"
+            )
+
+            fixpointConstraintsMap formula
+            |> Map.iter (fun x l -> 
+                l 
+                |> List.iter (fun c -> 
+                    if Map.containsKey c.TargetTraceVariable c.QuantifierPrefix |> not then 
+                        raise
+                        <| FoundError $"A fixpoint constraint for '{x}' adds trace variables '{c.TargetTraceVariable}', but may only add trace variables quantified in the prefix"
+                    )
+                )
+                
+            None
+
+        with FoundError msg ->
+            Some msg
+
 module Parser =
     open FParsec
 
-    let private traceVarParser = 
-        many1Chars (letter <|> digit)
+    let private commentParser = (skipString "--" .>> restOfLine false)
 
-    let private setVarParser = 
-        many1Chars (letter <|> digit)
+    let private ws = spaces .>> sepEndBy commentParser spaces
+
+    let private traceVarParser = many1Chars (letter <|> digit)
+
+    let private setVarParser = many1Chars (letter <|> digit)
 
 
-    let private prefixParser indexedAtomParser = 
-        let forallParser = 
-            pipe2 
-                (skipString "forall" >>. spaces >>. traceVarParser)
-                (spaces >>. skipChar ':' >>. spaces >>. setVarParser .>> spaces .>> skipChar '.')
-                (fun x y -> (FORALL, x, y) |> FirstOrder)
 
-        let existsParser = 
-            pipe2 
-                (skipString "exists" >>. spaces >>. traceVarParser)
-                (spaces >>. skipChar ':' >>. spaces >>. setVarParser .>> spaces .>> skipChar '.')
-                (fun x y -> (EXISTS, x, y) |> FirstOrder)
+    let private prefixParser indexedAtomParser =
+        let forallParser =
+            pipe2
+                (skipString "forall" >>. ws >>. traceVarParser)
+                (ws >>. skipChar ':' >>. ws >>. setVarParser .>> ws .>> skipChar '.')
+                (fun x y -> (FORALL, x, y) |> FirstOrderQuantifier)
 
-        let secondOrderConstructionParser indexedAtomParser = 
-            let iterationParser (indexedAtomParser : Parser<'T * TraceVariable, unit>) = 
-                let asignmentParser = 
-                    skipChar '[' >>. spaces >>. sepBy ((traceVarParser .>> spaces .>> skipChar ':') .>>. (spaces >>. setVarParser .>> spaces)) (skipChar ',' .>> spaces) .>> spaces .>> skipChar ']'
+        let existsParser =
+            pipe2
+                (skipString "exists" >>. ws >>. traceVarParser)
+                (ws >>. skipChar ':' >>. ws >>. setVarParser .>> ws .>> skipChar '.')
+                (fun x y -> (EXISTS, x, y) |> FirstOrderQuantifier)
 
-                Util.ParserUtil.pipe6
-                    (skipString "iter" >>. spaces >>. skipChar '(' >>. spaces >>. asignmentParser .>> spaces .>> skipChar ',')
-                    (spaces >>. FsOmegaLib.LTL.Parser.ltlParser indexedAtomParser .>> spaces .>> skipChar ',')
-                    (spaces >>. traceVarParser .>> spaces .>> skipChar ',')
-                    (spaces >>. asignmentParser .>> spaces .>> skipChar ',')
-                    (spaces >>. FsOmegaLib.LTL.Parser.ltlParser indexedAtomParser .>> spaces .>> skipChar ',')
-                    (spaces >>. traceVarParser .>> spaces .>> skipChar ')')
-                    (fun a b c d e f ->
-                        let init = 
-                            {
-                                IterationDescription.TraceDomain = Map.ofList a
-                                TransducerFormula = b
-                                ProjectionTarget = c
-                            }
+        let fixpointParser indexedAtomParser =
+            let fixpointConstraintParser =
+                let fixpointQuantifierPrefixParser =
+                    between
+                        (skipChar '[' .>> ws)
+                        (skipChar ']')
+                        (many (
+                            tuple2
+                                (traceVarParser .>> ws .>> skipChar ':' .>> ws)
+                                (setVarParser .>> ws .>> skipChar '.')
+                            .>> ws
+                        ))
 
-                        let step = 
-                            {
-                                IterationDescription.TraceDomain = Map.ofList d;
-                                TransducerFormula = e;
-                                ProjectionTarget = f;
-                            }
-                        
-                        Iteration(init=init, step=step)
+                pipe3
+                    (fixpointQuantifierPrefixParser .>> ws)
+                    (skipChar '{' >>. ws >>. FsOmegaLib.LTL.Parser.ltlParser indexedAtomParser
+                     .>> ws
+                     .>> skipChar '}'
+                     .>> ws
+                     .>> skipString "=>"
+                     .>> ws)
+                    (traceVarParser)
+                    (fun qf f pi ->
+                        {
+                            FixpointConstraint.QuantifierPrefix = Map.ofList qf
+                            StepFormula = f
+                            TargetTraceVariable = pi
+                        }
                     )
 
+            pipe2
+                (skipString "fix" >>. ws >>. skipChar '(' >>. ws >>. setVarParser
+                 .>> ws
+                 .>> skipChar '$'
+                 .>> ws)
+                (sepBy (fixpointConstraintParser .>> ws) (skipChar '$' .>> ws)
+                 .>> ws
+                 .>> skipChar ')'
+                 .>> ws
+                 .>> skipChar '.')
+                (fun f c -> FixpointQuantifier(c, f))
 
-            choice [
-                iterationParser indexedAtomParser
-            ]
-
-        let secondOrderMu indexedAtomParser = 
-            pipe2 
-                (skipString "mu" >>. spaces >>. setVarParser)
-                (spaces >>. skipChar ':' >>. spaces >>. secondOrderConstructionParser indexedAtomParser  .>> spaces .>> skipChar '.')
-                (fun x f -> SecondOrder(LEAST, x, f))
-
-        many1 ((forallParser <|> existsParser <|> secondOrderMu indexedAtomParser) .>> spaces)
+        many1 ((forallParser <|> existsParser <|> fixpointParser indexedAtomParser) .>> ws)
 
 
-    let private secondOrderHyperLTLParser (atomParser : Parser<'T, unit>) = 
-        let ap : Parser<'T * string, unit>= 
+    let private secondOrderHyperLTLParser (atomParser : Parser<'T, unit>) =
+        let ap : Parser<'T * string, unit> =
             atomParser .>> pchar '_' .>>. (many1Chars letter)
 
-        pipe2 
-            (spaces >>. prefixParser ap)
+        pipe2
+            (ws >>. prefixParser ap .>> ws)
             (FsOmegaLib.LTL.Parser.ltlParser ap)
-            (fun x y -> {SOHyperLTL.QuantifierPrefix = x; LTLMatrix = y})
-    
-    let parseSecondOrderHyperLTL (atomParser : Parser<'T, unit>) s =    
-        let full = secondOrderHyperLTLParser atomParser .>> spaces .>> eof
+            (fun x y ->
+                {
+                    SOHyperLTL.QuantifierPrefix = x
+                    LTLMatrix = y
+                }
+            )
+
+    let parseSecondOrderHyperLTL (atomParser : Parser<'T, unit>) s =
+        let full = secondOrderHyperLTLParser atomParser .>> ws .>> eof
         let res = run full s
+
         match res with
-        | Success (res, _, _) -> Result.Ok res
-        | Failure (err, _, _) -> Result.Error err
-    
+        | Success(res, _, _) -> Result.Ok res
+        | Failure(err, _, _) -> Result.Error err

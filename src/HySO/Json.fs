@@ -1,3 +1,20 @@
+(*    
+    Copyright (C) 2023-2024 Raven Beutner
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*)
+
 module HySO.Json
 
 exception JsonError
@@ -12,7 +29,7 @@ type Json =
 
 module Json =
 
-    let rec toString (json: Json) =
+    let rec toString (json : Json) =
         match json with
         | JString str -> "\"" + str + "\""
         | JNumber f -> string f
@@ -31,63 +48,63 @@ module Json =
             |> String.concat ", "
             |> fun x -> "{" + x + "}"
 
-    let lookup s (json: Json) =
+    let lookup s (json : Json) =
         match json with
         | JObject m -> if Map.containsKey s m then m.[s] else raise JsonError
         | _ -> raise JsonError
 
-    let tryLookup s (json: Json) =
+    let tryLookup s (json : Json) =
         match json with
         | JObject m -> if Map.containsKey s m then Some m.[s] else None
         | _ -> None
 
 
-    let getString (json: Json) =
+    let getString (json : Json) =
         match json with
         | JString s -> s
         | _ -> raise JsonError
 
-    let getNumber (json: Json) =
+    let getNumber (json : Json) =
         match json with
         | JNumber n -> n
         | _ -> raise JsonError
 
-    let getBool (json: Json) =
+    let getBool (json : Json) =
         match json with
         | JBool b -> b
         | _ -> raise JsonError
 
-    let getList (json: Json) =
+    let getList (json : Json) =
         match json with
         | JList l -> l
         | _ -> raise JsonError
 
-    let getMap (json: Json) =
+    let getMap (json : Json) =
         match json with
         | JObject s -> s
         | _ -> raise JsonError
 
-    let tryGetString (json: Json) =
+    let tryGetString (json : Json) =
         match json with
         | JString s -> Some s
         | _ -> None
 
-    let tryGetNumber (json: Json) =
+    let tryGetNumber (json : Json) =
         match json with
         | JNumber n -> Some n
         | _ -> None
 
-    let tryGetBool (json: Json) =
+    let tryGetBool (json : Json) =
         match json with
         | JBool b -> Some b
         | _ -> None
 
-    let tryGetList (json: Json) =
+    let tryGetList (json : Json) =
         match json with
         | JList l -> Some l
         | _ -> None
 
-    let tryGetMap (json: Json) =
+    let tryGetMap (json : Json) =
         match json with
         | JObject s -> Some s
         | _ -> None
@@ -112,12 +129,18 @@ module Parser =
 
         let unicodeEscape =
             pstring "u"
-            >>. pipe4 hex hex hex hex (fun h3 h2 h1 h0 ->
-                let hex2int c = (int c &&& 15) + (int c >>> 6) * 9
+            >>. pipe4
+                hex
+                hex
+                hex
+                hex
+                (fun h3 h2 h1 h0 ->
+                    let hex2int c = (int c &&& 15) + (int c >>> 6) * 9
 
-                (hex2int h3) * 4096 + (hex2int h2) * 256 + (hex2int h1) * 16 + hex2int h0
-                |> char
-                |> string)
+                    (hex2int h3) * 4096 + (hex2int h2) * 256 + (hex2int h1) * 16 + hex2int h0
+                    |> char
+                    |> string
+                )
 
         pchar '"'
         >>. (stringsSepBy (manySatisfy (fun c -> c <> '"' && c <> '\\')) (pstring "\\" >>. (escape <|> unicodeEscape)))
@@ -150,13 +173,15 @@ module Parser =
     do
         jsonParserRef.Value <-
             choice
-                [ objectParser
-                  listParser
-                  stringParser
-                  numberParser
-                  trueParser
-                  falseParser
-                  nullParser ]
+                [
+                    objectParser
+                    listParser
+                    stringParser
+                    numberParser
+                    trueParser
+                    falseParser
+                    nullParser
+                ]
 
     let parseJsonString str =
         let p = spaces >>. jsonParser .>> spaces .>> eof

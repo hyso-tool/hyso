@@ -9,7 +9,6 @@
     <Compile Include="Configuration.fs" />
     <Compile Include="AutomataUtil.fs" />
     <Compile Include="TransitionSystem.fs" />
-    <Compile Include="LassoPath.fs" />
     <Compile Include="SecondOrderHyperLTL.fs" />
     <Compile Include="ProductConstruction.fs" />
     <Compile Include="FirstOrderModelChecking.fs" />
