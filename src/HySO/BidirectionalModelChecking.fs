@@ -196,12 +196,12 @@ let modelChecking (config : Configuration) (tslist : list<TransitionSystem<'T, '
                 (matrixAut, negMatrixAut)
 
         match r with
-        | SAT ->
-            SAT, step
-        | UNSAT ->
-            UNSAT, step
+        | SAT x ->
+            SAT x, step
+        | UNSAT x ->
+            UNSAT x, step
         | UNKNOWN when step > stepBound ->
-            // exeeced the bound
+            // exceeded the bound
             UNKNOWN, step
         | UNKNOWN ->
             // Need to refine the second-order assignment

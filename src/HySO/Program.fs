@@ -79,11 +79,21 @@ let run (args : string array) =
 
 
     match res with
-    | SAT, i ->
+    | SAT x, i ->
         printfn "SAT"
+
+        if config.PrintWitness then 
+            let s = (x :> FsOmegaLib.AbstractAutomaton.AbstractAutomaton<_,_>).ToHoaString string (fun (a, b) -> a + "_" + b)
+            printfn $"\n{s}\n"
+
         config.Logger.LogN $"Iterations: %i{i}"
-    | UNSAT, i ->
+    | UNSAT x, i ->
         printfn "UNSAT"
+
+        if config.PrintWitness then 
+            let s = (x :> FsOmegaLib.AbstractAutomaton.AbstractAutomaton<_,_>).ToHoaString string (fun (a, b) -> a + "_" + b)
+            printfn $"\n{s}\n"
+
         config.Logger.LogN $"Iterations: %i{i}"
     | UNKNOWN, _ -> printfn "UNKNOWN"
 
